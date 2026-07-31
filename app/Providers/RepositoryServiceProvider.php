@@ -6,8 +6,10 @@ namespace App\Providers;
 
 use App\Interfaces\Repositories\ProjectRepositoryInterface;
 use App\Interfaces\Repositories\TaskRepositoryInterface;
+use App\Interfaces\Repositories\UserRepositoryInterface;
 use App\Repositories\ProjectRepository;
 use App\Repositories\TaskRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -23,5 +25,6 @@ class RepositoryServiceProvider extends ServiceProvider
     public array $bindings = [
         ProjectRepositoryInterface::class => ProjectRepository::class,
         TaskRepositoryInterface::class => TaskRepository::class,
+        UserRepositoryInterface::class => UserRepository::class,
     ];
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Exceptions\ArchivedProjectIsReadOnlyException;
+use App\Exceptions\InvalidCredentialsException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +86,21 @@ class ApiExceptionRenderingTest extends TestCase
                 'success' => false,
                 'message' => 'An archived project cannot be modified.',
                 'errors' => [],
+            ]);
+    }
+
+    public function test_invalid_credentials_return_the_unified_json_422(): void
+    {
+        Route::post('/api/v1/testing-credentials', function (): void {
+            throw new InvalidCredentialsException;
+        });
+
+        $this->postJson('/api/v1/testing-credentials')
+            ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertExactJson([
+                'success' => false,
+                'message' => 'The provided credentials are incorrect.',
+                'errors' => ['email' => ['The provided credentials are incorrect.']],
             ]);
     }
 

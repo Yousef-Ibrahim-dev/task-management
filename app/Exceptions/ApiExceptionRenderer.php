@@ -50,6 +50,11 @@ final class ApiExceptionRenderer
             $e instanceof AuthorizationException => $this->error(self::MESSAGE_FORBIDDEN, Response::HTTP_FORBIDDEN),
             $e instanceof ModelNotFoundException => $this->error(self::MESSAGE_NOT_FOUND, Response::HTTP_NOT_FOUND),
             $e instanceof ArchivedProjectIsReadOnlyException => $this->error($e->getMessage(), Response::HTTP_CONFLICT),
+            $e instanceof InvalidCredentialsException => $this->error(
+                $e->getMessage(),
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                ['email' => [$e->getMessage()]],
+            ),
             $e instanceof HttpExceptionInterface => $this->fromHttpException($e),
             default => $this->unexpected(),
         };
@@ -78,8 +83,7 @@ final class ApiExceptionRenderer
 
     private function unexpected(): ?JsonResponse
     {
-        // While debugging, Laravel's renderer reports the message, file and stack
-        // trace, which is more use to a developer than a generic envelope.
+
         if ((bool) config('app.debug')) {
             return null;
         }

@@ -31,6 +31,8 @@ return [
 
     'rate_limit' => [
         'per_minute' => (int) env('API_RATE_LIMIT_PER_MINUTE', 60),
+        'register_per_minute' => (int) env('API_REGISTER_RATE_LIMIT_PER_MINUTE', 3),
+        'login_per_minute' => (int) env('API_LOGIN_RATE_LIMIT_PER_MINUTE', 5),
     ],
 
 ];
