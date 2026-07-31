@@ -92,7 +92,6 @@ class LogoutTest extends TestCase
         $this->assertSame(1, $stranger->tokens()->count());
     }
 
-
     private function forgetResolvedGuard(): void
     {
         Auth::forgetGuards();

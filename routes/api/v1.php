@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Project\ProjectController;
+use App\Http\Controllers\Api\V1\Task\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->as('auth.')->group(function (): void {
@@ -30,4 +31,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::apiResource('projects', ProjectController::class)
         ->where(['project' => '[0-9]+']);
+
+    Route::apiResource('projects.tasks', TaskController::class)
+        ->where(['project' => '[0-9]+', 'task' => '[0-9]+']);
 });

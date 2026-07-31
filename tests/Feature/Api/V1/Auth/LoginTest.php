@@ -69,7 +69,7 @@ class LoginTest extends TestCase
         $this->user();
 
         $this->postJson('/api/v1/auth/login', [
-            'email' => '  YOUSEF@Example.com ',
+            'email' => '  YOUSEF.IBRAHIM.DEV@Gmail.com ',
             'password' => self::PASSWORD,
         ])->assertOk();
     }
@@ -84,7 +84,7 @@ class LoginTest extends TestCase
         ]);
 
         $wrongPassword = $this->postJson('/api/v1/auth/login', [
-            'email' => 'yousef@example.com',
+            'email' => 'yousef.ibrahim.dev@gmail.com',
             'password' => 'not-the-password',
         ]);
 

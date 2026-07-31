@@ -77,7 +77,7 @@ class RegisterTest extends TestCase
     public function test_it_normalises_the_email_before_persisting(): void
     {
         $this->postJson('/api/v1/auth/register', $this->payload([
-            'email' => '  Yousef@Example.COM  ',
+            'email' => '  Yousef.Ibrahim.DEV@Gmail.COM  ',
         ]))->assertStatus(Response::HTTP_CREATED)
             ->assertJsonPath('data.user.email', 'yousef.ibrahim.dev@gmail.com');
 

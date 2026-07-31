@@ -29,7 +29,6 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(! $this->app->isProduction());
     }
 
-
     private function configureRateLimiting(): void
     {
         RateLimiter::for('api', function (Request $request): Limit {

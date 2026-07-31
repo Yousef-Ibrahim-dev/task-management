@@ -59,7 +59,12 @@ final class TaskRepository implements TaskRepositoryInterface
      */
     public function findOwnedTask(int $taskId, int $projectId, int $userId): Task
     {
-        return $this->ownedQuery($projectId, $userId)->whereKey($taskId)->firstOrFail();
+        // The owning columns come back with the task so authorization can read
+        // them without lazy loading. Listings deliberately skip this.
+        return $this->ownedQuery($projectId, $userId)
+            ->with('project:id,user_id')
+            ->whereKey($taskId)
+            ->firstOrFail();
     }
 
     /**
