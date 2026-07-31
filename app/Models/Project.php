@@ -20,6 +20,16 @@ class Project extends Model
     use SoftDeletes;
 
     /**
+     * Mirrors the column default so a freshly created model carries a status
+     * without a round trip to read it back.
+     *
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'status' => ProjectStatus::Active->value,
+    ];
+
+    /**
      * @var list<string>
      */
     protected $fillable = [

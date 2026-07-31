@@ -1,17 +1,17 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| API v1 Routes
-|--------------------------------------------------------------------------
-|
-| Registered under the "/api/v1" URI prefix and the "api.v1." route name
-| prefix by routes/api.php.
-|
-| Planned groups:
-|   Auth      -> /api/v1/register, /api/v1/login, /api/v1/logout
-|   Projects  -> /api/v1/projects
-|   Tasks     -> /api/v1/tasks
-|   Dashboard -> /api/v1/dashboard
-|
-*/
+use App\Http\Controllers\Api\V1\Project\ProjectController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::patch('projects/{project}/archive', [ProjectController::class, 'archive'])
+        ->whereNumber('project')
+        ->name('projects.archive');
+
+    Route::patch('projects/{project}/restore-status', [ProjectController::class, 'restoreStatus'])
+        ->whereNumber('project')
+        ->name('projects.restore-status');
+
+    Route::apiResource('projects', ProjectController::class)
+        ->where(['project' => '[0-9]+']);
+});
