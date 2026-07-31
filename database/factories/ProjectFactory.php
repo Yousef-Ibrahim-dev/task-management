@@ -29,14 +29,21 @@ class ProjectFactory extends Factory
 
     public function active(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'status' => ProjectStatus::Active,
+        ]);
+    }
+
+    public function completed(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => ProjectStatus::Completed,
         ]);
     }
 
     public function archived(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'status' => ProjectStatus::Archived,
         ]);
     }

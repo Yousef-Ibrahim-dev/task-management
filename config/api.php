@@ -9,7 +9,7 @@ return [
     |
     | "default" is the page size used when a request does not ask for one, and
     | "max" is the ceiling applied to a client supplied page size. Both are
-    | enforced by BaseRepository::resolvePerPage() so no repository repeats them.
+    | enforced by the ResolvesPerPage trait so no repository repeats them.
     |
     */
 

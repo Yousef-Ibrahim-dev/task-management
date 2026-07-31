@@ -70,14 +70,48 @@ class ProjectTest extends TestCase
         ]);
     }
 
-    public function test_deleting_a_user_deletes_their_projects(): void
+    public function test_the_status_is_cast_to_the_completed_enum_case(): void
+    {
+        $project = Project::factory()->completed()->create();
+
+        $this->assertSame(ProjectStatus::Completed, $project->fresh()?->status);
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'status' => ProjectStatus::Completed->value,
+        ]);
+    }
+
+    public function test_deleting_a_user_physically_removes_their_projects(): void
     {
         $user = User::factory()->create();
         $project = Project::factory()->for($user)->create();
 
+        // The user model has no soft deletes, so the foreign key cascade runs.
         $user->delete();
 
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+    }
+
+    public function test_deleting_a_project_soft_deletes_it(): void
+    {
+        $project = Project::factory()->create();
+
+        $project->delete();
+
+        $this->assertSoftDeleted($project);
+        $this->assertDatabaseCount('projects', 1);
+    }
+
+    public function test_a_soft_deleted_project_is_excluded_from_normal_queries(): void
+    {
+        $user = User::factory()->create();
+        $kept = Project::factory()->for($user)->create();
+        $removed = Project::factory()->for($user)->create();
+
+        $removed->delete();
+
+        $this->assertSame(1, Project::query()->count());
+        $this->assertSame([$kept->id], Project::query()->pluck('id')->all());
     }
 
     public function test_the_factory_produces_an_active_project_owned_by_a_user(): void

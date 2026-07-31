@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Interfaces\Repositories\ProjectRepositoryInterface;
+use App\Repositories\ProjectRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -16,5 +18,7 @@ class RepositoryServiceProvider extends ServiceProvider
      *
      * @var array<class-string, class-string>
      */
-    public array $bindings = [];
+    public array $bindings = [
+        ProjectRepositoryInterface::class => ProjectRepository::class,
+    ];
 }

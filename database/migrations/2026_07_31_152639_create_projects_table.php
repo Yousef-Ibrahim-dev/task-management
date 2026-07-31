@@ -16,6 +16,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('status', 20)->default(ProjectStatus::Active->value);
             $table->timestamps();
+            $table->softDeletes();
             $table->index(['user_id', 'status']);
         });
     }

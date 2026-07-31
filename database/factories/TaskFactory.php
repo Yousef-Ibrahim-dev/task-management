@@ -39,7 +39,7 @@ class TaskFactory extends Factory
 
     public function todo(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'status' => TaskStatus::Todo,
             'completed_at' => null,
         ]);
@@ -47,7 +47,7 @@ class TaskFactory extends Factory
 
     public function inProgress(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'status' => TaskStatus::InProgress,
             'completed_at' => null,
         ]);
@@ -55,7 +55,7 @@ class TaskFactory extends Factory
 
     public function done(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'status' => TaskStatus::Done,
             'completed_at' => fake()->dateTimeBetween('-1 month', 'now'),
         ]);
@@ -63,21 +63,21 @@ class TaskFactory extends Factory
 
     public function lowPriority(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'priority' => TaskPriority::Low,
         ]);
     }
 
     public function mediumPriority(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'priority' => TaskPriority::Medium,
         ]);
     }
 
     public function highPriority(): static
     {
-        return $this->state(static fn (): array => [
+        return $this->state(fn (): array => [
             'priority' => TaskPriority::High,
         ]);
     }

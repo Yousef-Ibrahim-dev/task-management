@@ -4,6 +4,10 @@ includes:
 parameters:
     level: 6
 
+    # Without this Larastan reads the declared return type of casts() instead of
+    # its body, so enum casts are seen as plain strings.
+    parseModelCastsMethod: true
+
     paths:
         - app
         - config

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['project_id', 'status']);
             $table->index('due_date');

@@ -79,23 +79,59 @@ class TaskTest extends TestCase
         $this->assertNull($task->completed_at);
     }
 
-    public function test_deleting_a_project_deletes_its_tasks(): void
+    public function test_soft_deleting_a_project_leaves_its_tasks_stored(): void
     {
         $project = Project::factory()->has(Task::factory()->count(3))->create();
 
         $project->delete();
 
+        $this->assertSoftDeleted($project);
+        $this->assertDatabaseCount('tasks', 3);
+        $this->assertSame(3, Task::query()->count());
+    }
+
+    public function test_force_deleting_a_project_removes_its_tasks_through_the_database_cascade(): void
+    {
+        $project = Project::factory()->has(Task::factory()->count(3))->create();
+
+        $project->forceDelete();
+
+        $this->assertDatabaseCount('projects', 0);
         $this->assertDatabaseCount('tasks', 0);
     }
 
-    public function test_deleting_a_user_deletes_tasks_through_the_project(): void
+    public function test_deleting_a_user_removes_tasks_through_the_project_cascade(): void
     {
         $project = Project::factory()->has(Task::factory()->count(2))->create();
 
+        // The user model has no soft deletes, so this is a physical delete and
+        // the foreign keys cascade all the way down.
         $project->user()->delete();
 
         $this->assertDatabaseCount('projects', 0);
         $this->assertDatabaseCount('tasks', 0);
+    }
+
+    public function test_deleting_a_task_soft_deletes_it(): void
+    {
+        $task = Task::factory()->create();
+
+        $task->delete();
+
+        $this->assertSoftDeleted($task);
+        $this->assertNotNull($task->fresh()?->deleted_at);
+    }
+
+    public function test_a_soft_deleted_task_is_excluded_from_normal_queries(): void
+    {
+        $project = Project::factory()->create();
+        $kept = Task::factory()->for($project)->create();
+        $removed = Task::factory()->for($project)->create();
+
+        $removed->delete();
+
+        $this->assertSame(1, Task::query()->count());
+        $this->assertSame([$kept->id], Task::query()->pluck('id')->all());
     }
 
     public function test_the_factory_never_completes_an_unfinished_task(): void
