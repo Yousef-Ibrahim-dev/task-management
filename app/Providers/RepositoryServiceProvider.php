@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Interfaces\Repositories\DashboardRepositoryInterface;
 use App\Interfaces\Repositories\ProjectRepositoryInterface;
 use App\Interfaces\Repositories\TaskRepositoryInterface;
 use App\Interfaces\Repositories\UserRepositoryInterface;
+use App\Repositories\DashboardRepository;
 use App\Repositories\ProjectRepository;
 use App\Repositories\TaskRepository;
 use App\Repositories\UserRepository;
@@ -23,6 +25,7 @@ class RepositoryServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     public array $bindings = [
+        DashboardRepositoryInterface::class => DashboardRepository::class,
         ProjectRepositoryInterface::class => ProjectRepository::class,
         TaskRepositoryInterface::class => TaskRepository::class,
         UserRepositoryInterface::class => UserRepository::class,

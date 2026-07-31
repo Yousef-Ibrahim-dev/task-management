@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Project\ProjectController;
 use App\Http\Controllers\Api\V1\Task\TaskController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,8 @@ Route::prefix('auth')->as('auth.')->group(function (): void {
 });
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
+
     Route::patch('projects/{project}/archive', [ProjectController::class, 'archive'])
         ->whereNumber('project')
         ->name('projects.archive');
