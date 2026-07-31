@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Exceptions\ArchivedProjectIsReadOnlyException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,21 @@ class ApiExceptionRenderingTest extends TestCase
             ->assertExactJson([
                 'success' => false,
                 'message' => 'The HTTP method is not supported for this endpoint.',
+                'errors' => [],
+            ]);
+    }
+
+    public function test_a_read_only_project_returns_the_unified_json_409(): void
+    {
+        Route::patch('/api/v1/testing-archived', function (): void {
+            throw new ArchivedProjectIsReadOnlyException;
+        });
+
+        $this->patchJson('/api/v1/testing-archived')
+            ->assertStatus(Response::HTTP_CONFLICT)
+            ->assertExactJson([
+                'success' => false,
+                'message' => 'An archived project cannot be modified.',
                 'errors' => [],
             ]);
     }

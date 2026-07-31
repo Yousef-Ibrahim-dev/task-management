@@ -49,6 +49,7 @@ final class ApiExceptionRenderer
             $e instanceof AuthenticationException => $this->error(self::MESSAGE_UNAUTHENTICATED, Response::HTTP_UNAUTHORIZED),
             $e instanceof AuthorizationException => $this->error(self::MESSAGE_FORBIDDEN, Response::HTTP_FORBIDDEN),
             $e instanceof ModelNotFoundException => $this->error(self::MESSAGE_NOT_FOUND, Response::HTTP_NOT_FOUND),
+            $e instanceof ArchivedProjectIsReadOnlyException => $this->error($e->getMessage(), Response::HTTP_CONFLICT),
             $e instanceof HttpExceptionInterface => $this->fromHttpException($e),
             default => $this->unexpected(),
         };

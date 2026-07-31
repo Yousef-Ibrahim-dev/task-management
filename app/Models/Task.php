@@ -20,6 +20,17 @@ class Task extends Model
     use SoftDeletes;
 
     /**
+     * Mirrors the column defaults so a freshly created model carries a status
+     * and priority without a round trip to read them back.
+     *
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'status' => TaskStatus::Todo->value,
+        'priority' => TaskPriority::Medium->value,
+    ];
+
+    /**
      * @var list<string>
      */
     protected $fillable = [
