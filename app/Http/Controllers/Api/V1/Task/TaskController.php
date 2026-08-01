@@ -9,9 +9,7 @@ use App\Http\Requests\Task\IndexTaskRequest;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
-use App\Models\User;
 use App\Services\TaskService;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -24,7 +22,7 @@ final class TaskController extends BaseApiController
     {
         $tasks = $this->tasks->paginateForProject(
             $project,
-            $this->userId($request),
+            $this->authenticatedUserId($request),
             $request->perPage(),
             $request->status(),
             $request->priority(),
@@ -36,14 +34,14 @@ final class TaskController extends BaseApiController
 
     public function store(StoreTaskRequest $request, int $project): JsonResponse
     {
-        $task = $this->tasks->createForProject($project, $this->userId($request), $request->payload());
+        $task = $this->tasks->createForProject($project, $this->authenticatedUserId($request), $request->payload());
 
         return $this->created(new TaskResource($task), 'Task created successfully.');
     }
 
     public function show(Request $request, int $project, int $task): JsonResponse
     {
-        $owned = $this->tasks->findForUser($task, $project, $this->userId($request));
+        $owned = $this->tasks->findForUser($task, $project, $this->authenticatedUserId($request));
 
         $this->authorize('view', $owned);
 
@@ -52,7 +50,7 @@ final class TaskController extends BaseApiController
 
     public function update(UpdateTaskRequest $request, int $project, int $task): JsonResponse
     {
-        $userId = $this->userId($request);
+        $userId = $this->authenticatedUserId($request);
 
         $this->authorize('update', $this->tasks->findForUser($task, $project, $userId));
 
@@ -63,29 +61,12 @@ final class TaskController extends BaseApiController
 
     public function destroy(Request $request, int $project, int $task): Response
     {
-        $userId = $this->userId($request);
+        $userId = $this->authenticatedUserId($request);
 
         $this->authorize('delete', $this->tasks->findForUser($task, $project, $userId));
 
         $this->tasks->deleteForUser($task, $project, $userId);
 
         return $this->noContent();
-    }
-
-    /**
-     * The group is behind auth:sanctum, so the guard below only exists to keep
-     * the identifier typed rather than nullable.
-     *
-     * @throws AuthenticationException
-     */
-    private function userId(Request $request): int
-    {
-        $user = $request->user();
-
-        if (! $user instanceof User) {
-            throw new AuthenticationException;
-        }
-
-        return $user->id;
     }
 }

@@ -9,9 +9,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\AuthenticationResource;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use App\Services\AuthService;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -44,19 +42,5 @@ final class AuthController extends BaseApiController
     public function me(Request $request): JsonResponse
     {
         return $this->success(new UserResource($this->authenticatedUser($request)), 'User retrieved successfully.');
-    }
-
-    /**
-     * @throws AuthenticationException
-     */
-    private function authenticatedUser(Request $request): User
-    {
-        $user = $request->user();
-
-        if (! $user instanceof User) {
-            throw new AuthenticationException;
-        }
-
-        return $user;
     }
 }

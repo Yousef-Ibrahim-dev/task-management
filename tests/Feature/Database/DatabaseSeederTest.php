@@ -180,6 +180,23 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(0, Task::query()->onlyTrashed()->count());
     }
 
+    public function test_it_seeds_nothing_when_the_environment_is_production(): void
+    {
+        Task::query()->forceDelete();
+        Project::query()->forceDelete();
+        User::query()->delete();
+
+        $this->app->detectEnvironment(fn (): string => 'production');
+
+        // --force is what gets past Laravel's own production confirmation, so it
+        // is the path the seeder's guard actually has to cover.
+        $this->artisan('db:seed', ['--force' => true])->assertSuccessful();
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('projects', 0);
+        $this->assertDatabaseCount('tasks', 0);
+    }
+
     public function test_reseeding_creates_no_duplicates(): void
     {
         $before = [
