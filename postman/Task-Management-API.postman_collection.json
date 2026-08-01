@@ -1,0 +1,1464 @@
+{
+    "info": {
+        "_postman_id": "0f5b7c92-3a41-4d68-8b2e-5c9a1f7d0e34",
+        "name": "Task Management API",
+        "description": "Laravel 12 REST API for projects and tasks.\n\nSetup:\n1. Import this collection and the `Task Management API — Local` environment.\n2. Run `Authentication > Login Demo User`. The token is saved automatically.\n3. Run `Projects > List Projects` once, which stores the seeded project ids used by the Tasks folder.\n\nEvery folder can then be run top to bottom without destroying the seeded dataset.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "created_project_id",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Ada Lovelace\",\n    \"email\": \"ada@example.com\",\n    \"password\": \"secret-password\",\n    \"password_confirmation\": \"secret-password\",\n    \"device_name\": \"postman\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/register",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "register"]
+                        },
+                        "description": "Creates an account and returns a token. Re-running returns 422 because the email is already taken."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('creates the account', function () {",
+                                    "    pm.expect([201, 422]).to.include(pm.response.code);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 201) {",
+                                    "    var body = pm.response.json();",
+                                    "    pm.test('returns the envelope and a token', function () {",
+                                    "        pm.expect(body.success).to.eql(true);",
+                                    "        pm.expect(body.data.token).to.be.a('string').and.not.empty;",
+                                    "        pm.expect(body.data.token_type).to.eql('Bearer');",
+                                    "    });",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Login Demo User",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{demo_email}}\",\n    \"password\": \"{{demo_password}}\",\n    \"device_name\": \"postman\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "login"]
+                        },
+                        "description": "Stores the returned token in the environment as `token`."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('returns a bearer token', function () {",
+                                    "    pm.expect(body.success).to.eql(true);",
+                                    "    pm.expect(body.data.token).to.be.a('string').and.not.empty;",
+                                    "    pm.expect(body.data.token_type).to.eql('Bearer');",
+                                    "});",
+                                    "",
+                                    "pm.environment.set('token', body.data.token);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Login Second User",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{second_email}}\",\n    \"password\": \"{{demo_password}}\",\n    \"device_name\": \"postman\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "login"]
+                        },
+                        "description": "Stores a second token so ownership isolation can be checked by hand."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "pm.environment.set('second_token', body.data.token);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Me",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/me",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "me"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('returns the user without credential fields', function () {",
+                                    "    pm.expect(body.success).to.eql(true);",
+                                    "    pm.expect(Object.keys(body.data)).to.eql(['id', 'name', 'email', 'created_at', 'updated_at']);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Me as Second User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{second_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/me",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "me"]
+                        },
+                        "description": "Confirms the second token belongs to a different account."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('is a different account', function () {",
+                                    "    pm.expect(pm.response.json().data.email).to.eql(pm.environment.get('second_email'));",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/auth/logout",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "auth", "logout"]
+                        },
+                        "description": "Revokes only the token used for this request. Run Login again afterwards."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 204', function () {",
+                                    "    pm.response.to.have.status(204);",
+                                    "});",
+                                    "",
+                                    "pm.test('body is empty', function () {",
+                                    "    pm.expect(pm.response.text()).to.eql('');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Projects",
+            "item": [
+                {
+                    "name": "List Projects",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects?per_page=15&page=1",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects"],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Also stores the seeded active, archived and completed project ids used elsewhere in the collection."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('pagination sits beside data', function () {",
+                                    "    pm.expect(body.success).to.eql(true);",
+                                    "    pm.expect(body.data).to.be.an('array');",
+                                    "    pm.expect(body.meta).to.have.all.keys('current_page', 'per_page', 'last_page', 'total');",
+                                    "    pm.expect(body.links).to.have.all.keys('first', 'last', 'prev', 'next');",
+                                    "});",
+                                    "",
+                                    "function idOf(status) {",
+                                    "    var match = body.data.filter(function (p) { return p.status === status; })[0];",
+                                    "    return match ? match.id : null;",
+                                    "}",
+                                    "",
+                                    "if (idOf('active')) { pm.environment.set('project_id', idOf('active')); }",
+                                    "if (idOf('archived')) { pm.environment.set('archived_project_id', idOf('archived')); }",
+                                    "if (idOf('completed')) { pm.environment.set('completed_project_id', idOf('completed')); }"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Filter Projects by Active",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects?status=active",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects"],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "active"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('every row is active', function () {",
+                                    "    pm.response.json().data.forEach(function (project) {",
+                                    "        pm.expect(project.status).to.eql('active');",
+                                    "    });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Project",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Search Index Rewrite\",\n    \"description\": \"Move search off the primary database.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects"]
+                        },
+                        "description": "Saves the new id as `created_project_id`, which the Delete request uses so the seeded data stays intact."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('defaults to active and hides the owner', function () {",
+                                    "    pm.expect(body.success).to.eql(true);",
+                                    "    pm.expect(body.data.status).to.eql('active');",
+                                    "    pm.expect(body.data).to.not.have.property('user_id');",
+                                    "});",
+                                    "",
+                                    "pm.collectionVariables.set('created_project_id', body.data.id);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Show Project",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('exposes only the intended fields', function () {",
+                                    "    pm.expect(Object.keys(pm.response.json().data)).to.eql(",
+                                    "        ['id', 'name', 'description', 'status', 'created_at', 'updated_at']",
+                                    "    );",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Project",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Website Redesign\",\n    \"description\": \"Rebuild the marketing site on the new design system.\",\n    \"status\": \"active\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('returns the updated project', function () {",
+                                    "    pm.expect(pm.response.json().data.name).to.eql('Website Redesign');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Project — Validation Error",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"\",\n    \"status\": \"not-a-status\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects"]
+                        },
+                        "description": "Shows the unified 422 envelope."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 422', function () {",
+                                    "    pm.response.to.have.status(422);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('returns field errors', function () {",
+                                    "    pm.expect(body.success).to.eql(false);",
+                                    "    pm.expect(body.errors).to.have.property('name');",
+                                    "    pm.expect(body.errors).to.have.property('status');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Archive Project",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/archive",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "archive"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('project is archived', function () {",
+                                    "    pm.expect(pm.response.json().data.status).to.eql('archived');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Restore Project Status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/restore-status",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "restore-status"]
+                        },
+                        "description": "Sets the status back to active. This does not restore a soft-deleted record."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('project is active again', function () {",
+                                    "    pm.expect(pm.response.json().data.status).to.eql('active');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Show Another User's Project — 404",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{second_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}"]
+                        },
+                        "description": "The demo user's project requested with the second user's token. Returns 404, never 403, so existence is not revealed."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 404', function () {",
+                                    "    pm.response.to.have.status(404);",
+                                    "});",
+                                    "",
+                                    "pm.test('reveals nothing about the record', function () {",
+                                    "    var body = pm.response.json();",
+                                    "    pm.expect(body.success).to.eql(false);",
+                                    "    pm.expect(body.message).to.eql('Resource not found.');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete Project",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{created_project_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{created_project_id}}"]
+                        },
+                        "description": "Soft deletes the project created earlier, leaving the seeded dataset untouched."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 204', function () {",
+                                    "    pm.response.to.have.status(204);",
+                                    "});",
+                                    "",
+                                    "pm.test('body is empty', function () {",
+                                    "    pm.expect(pm.response.text()).to.eql('');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Tasks",
+            "item": [
+                {
+                    "name": "List Tasks",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?per_page=15&page=1",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('pagination sits beside data', function () {",
+                                    "    pm.expect(body.meta).to.have.all.keys('current_page', 'per_page', 'last_page', 'total');",
+                                    "    pm.expect(body.links).to.have.all.keys('first', 'last', 'prev', 'next');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Filter Tasks by Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?status=todo",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "todo"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('every row is todo', function () {",
+                                    "    pm.response.json().data.forEach(function (task) {",
+                                    "        pm.expect(task.status).to.eql('todo');",
+                                    "    });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Filter Tasks by Priority",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?priority=high",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+                            "query": [
+                                {
+                                    "key": "priority",
+                                    "value": "high"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('every row is high priority', function () {",
+                                    "    pm.response.json().data.forEach(function (task) {",
+                                    "        pm.expect(task.priority).to.eql('high');",
+                                    "    });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Search Tasks by Title",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?search=login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "login"
+                                }
+                            ]
+                        },
+                        "description": "Search matches the title only, never the description."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('every row matches the title search', function () {",
+                                    "    pm.response.json().data.forEach(function (task) {",
+                                    "        pm.expect(task.title.toLowerCase()).to.include('login');",
+                                    "    });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Combined Filters",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?status=todo&priority=high&search=login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "todo"
+                                },
+                                {
+                                    "key": "priority",
+                                    "value": "high"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "login"
+                                }
+                            ]
+                        },
+                        "description": "Filters combine with AND."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('every row matches all three filters', function () {",
+                                    "    pm.response.json().data.forEach(function (task) {",
+                                    "        pm.expect(task.status).to.eql('todo');",
+                                    "        pm.expect(task.priority).to.eql('high');",
+                                    "        pm.expect(task.title.toLowerCase()).to.include('login');",
+                                    "    });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Filter Tasks — Invalid Status 422",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks?status=archived",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "archived"
+                                }
+                            ]
+                        },
+                        "description": "A value outside TaskStatus is rejected rather than silently ignored."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 422', function () {",
+                                    "    pm.response.to.have.status(422);",
+                                    "});",
+                                    "",
+                                    "pm.test('names the offending field', function () {",
+                                    "    pm.expect(pm.response.json().errors).to.have.property('status');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Todo Task",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Fix the login redirect loop\",\n    \"description\": \"Reproduced on staging with a fresh account.\",\n    \"status\": \"todo\",\n    \"priority\": \"high\",\n    \"due_date\": \"2026-12-31\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"]
+                        },
+                        "description": "The project comes from the route. A `project_id` in the body is ignored."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('an unfinished task has no completion time', function () {",
+                                    "    pm.expect(body.data.status).to.eql('todo');",
+                                    "    pm.expect(body.data.completed_at).to.eql(null);",
+                                    "});",
+                                    "",
+                                    "pm.environment.set('task_id', body.data.id);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Done Task",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Ship the beta build to testers\",\n    \"status\": \"done\",\n    \"priority\": \"medium\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks"]
+                        },
+                        "description": "`completed_at` cannot be sent by a client; the service stamps it."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('a done task is stamped automatically', function () {",
+                                    "    var data = pm.response.json().data;",
+                                    "    pm.expect(data.status).to.eql('done');",
+                                    "    pm.expect(data.completed_at).to.be.a('string').and.not.empty;",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Show Task",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('exposes only the intended fields', function () {",
+                                    "    pm.expect(Object.keys(pm.response.json().data)).to.eql([",
+                                    "        'id', 'project_id', 'title', 'description', 'status',",
+                                    "        'priority', 'due_date', 'completed_at', 'created_at', 'updated_at'",
+                                    "    ]);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Task",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Fix the login redirect loop on Safari\",\n    \"priority\": \"medium\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+                        },
+                        "description": "PATCH accepts a partial payload; untouched fields keep their values."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('applies the partial update', function () {",
+                                    "    var data = pm.response.json().data;",
+                                    "    pm.expect(data.title).to.eql('Fix the login redirect loop on Safari');",
+                                    "    pm.expect(data.priority).to.eql('medium');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Mark Task Done through Update",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"done\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+                        },
+                        "description": "There is no separate complete endpoint; status changes go through the standard update."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('completion time is set by the service', function () {",
+                                    "    var data = pm.response.json().data;",
+                                    "    pm.expect(data.status).to.eql('done');",
+                                    "    pm.expect(data.completed_at).to.be.a('string').and.not.empty;",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Reopen Task — Clears Completion",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"in_progress\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('completion time is cleared', function () {",
+                                    "    var data = pm.response.json().data;",
+                                    "    pm.expect(data.status).to.eql('in_progress');",
+                                    "    pm.expect(data.completed_at).to.eql(null);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Task in Archived Project — 409",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"This should be rejected\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{archived_project_id}}/tasks",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{archived_project_id}}", "tasks"]
+                        },
+                        "description": "Archived projects are read-only for task mutations. Listing and viewing still work."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 409', function () {",
+                                    "    pm.response.to.have.status(409);",
+                                    "});",
+                                    "",
+                                    "pm.test('explains the conflict', function () {",
+                                    "    var body = pm.response.json();",
+                                    "    pm.expect(body.success).to.eql(false);",
+                                    "    pm.expect(body.message).to.eql('An archived project cannot be modified.');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "List Tasks in Archived Project — Allowed",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{archived_project_id}}/tasks",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{archived_project_id}}", "tasks"]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('reading an archived project is allowed', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Task in Completed Project — Allowed",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Follow-up on the completed project\",\n    \"priority\": \"low\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{completed_project_id}}/tasks",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{completed_project_id}}", "tasks"]
+                        },
+                        "description": "Completed projects stay editable; only archived ones are read-only."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete Task",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/projects/{{project_id}}/tasks/{{task_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "projects", "{{project_id}}", "tasks", "{{task_id}}"]
+                        },
+                        "description": "Soft deletes the task created earlier."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 204', function () {",
+                                    "    pm.response.to.have.status(204);",
+                                    "});",
+                                    "",
+                                    "pm.test('body is empty', function () {",
+                                    "    pm.expect(pm.response.text()).to.eql('');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "item": [
+                {
+                    "name": "Get Dashboard",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/dashboard",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "dashboard"]
+                        },
+                        "description": "Eight counters for the authenticated user. On a freshly seeded database the demo user returns 4 projects and 14 tasks."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('status is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "var body = pm.response.json();",
+                                    "",
+                                    "pm.test('returns exactly the eight counters', function () {",
+                                    "    pm.expect(Object.keys(body.data)).to.eql([",
+                                    "        'total_projects', 'active_projects', 'completed_projects', 'archived_projects',",
+                                    "        'total_tasks', 'completed_tasks', 'pending_tasks', 'overdue_tasks'",
+                                    "    ]);",
+                                    "});",
+                                    "",
+                                    "pm.test('every counter is a number', function () {",
+                                    "    Object.keys(body.data).forEach(function (key) {",
+                                    "        pm.expect(body.data[key]).to.be.a('number');",
+                                    "    });",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
